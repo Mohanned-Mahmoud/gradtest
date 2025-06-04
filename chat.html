@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AnatomyLab - AI Brain Science Chat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      background-color: #94a3b8;
+      border-radius: 50%;
+      display: inline-block;
+      opacity: 0.4;
+    }
+    .typing-indicator span:nth-child(1) { animation: typing 1s infinite 0s; }
+    .typing-indicator span:nth-child(2) { animation: typing 1s infinite 0.15s; }
+    .typing-indicator span:nth-child(3) { animation: typing 1s infinite 0.3s; }
+    @keyframes typing {
+      0% { transform: translateY(0px); opacity: 0.4; }
+      50% { transform: translateY(-4px); opacity: 0.8; }
+      100% { transform: translateY(0px); opacity: 0.4; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+  <header class="bg-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <a href="/" class="flex items-center space-x-2">
+            <span class="text-2xl">🧠</span>
+            <span class="text-xl font-bold text-gray-900">AnatomyLab</span>
+          </a>
+        </div>
+        <nav class="hidden md:flex items-center space-x-8">
+          <a href="/" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Home</a>
+          <a href="/test-features" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Test Features</a>
+          <a href="/products" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Products</a>
+          <a href="/about" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">About</a>
+          <a href="/contact" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Contact</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">NeuroScience AI Assistant</h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+          Ask me anything about the human brain, neuroscience, or cognitive functions
+        </p>
+      </div>
+      
+      <div class="flex flex-col lg:flex-row gap-8">
+        <aside class="lg:w-1/4">
+          <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Suggested Questions</h3>
+            <ul class="space-y-2">
+              <li><button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors">What are the main parts of the brain?</button></li>
+              <li><button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors">How does memory work?</button></li>
+              <li><button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors">Explain neurons and glial cells</button></li>
+              <li><button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors">What happens during a seizure?</button></li>
+              <li><button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors">How does the brain develop?</button></li>
+              <li><button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors">What is neuroplasticity?</button></li>
+              <li><button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors">Explain the blood-brain barrier</button></li>
+              <li><button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors">How do neurotransmitters work?</button></li>
+            </ul>
+          </div>
+        </aside>
+        
+        <div class="lg:w-3/4">
+          <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div id="messages" class="h-[600px] overflow-y-auto p-6 space-y-4 bg-gray-50">
+              <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm">AI</div>
+                <div class="flex-1">
+                  <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <p class="text-gray-700">Hello! I'm your NeuroScience AI assistant. Ask me anything about the human brain, neuroscience, or cognitive functions. I can explain complex concepts in simple terms.</p>
+                  </div>
+                  <span class="text-xs text-gray-500 mt-1 block">Just now</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="border-t border-gray-200 p-4 bg-white">
+              <form id="chat-form" class="flex gap-2">
+                <input
+                  type="text"
+                  id="user-input"
+                  placeholder="Type your neuroscience question..."
+                  class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                <button
+                  type="submit"
+                  class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  Send
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-gray-900 text-white mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <h3 class="text-lg font-semibold mb-4">AnatomyLab</h3>
+          <p class="text-gray-400">
+            Advancing human anatomy education through cutting-edge technology and interactive learning experiences.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+          <ul class="space-y-2">
+            <li><a href="/products" class="text-gray-400 hover:text-white">Products</a></li>
+            <li><a href="/test-features" class="text-gray-400 hover:text-white">Test Features</a></li>
+            <li><a href="/about" class="text-gray-400 hover:text-white">About Us</a></li>
+            <li><a href="/contact" class="text-gray-400 hover:text-white">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Contact Info</h3>
+          <ul class="space-y-2 text-gray-400">
+            <li>contact@anatomylab.com</li>
+            <li>+1 (555) 123-4567</li>
+            <li>123 Science Way</li>
+            <li>Innovation City, IC 12345</li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Follow Us</h3>
+          <div class="flex space-x-4">
+            <a href="#" class="text-gray-400 hover:text-white">
+              <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path></svg>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-white">
+              <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path></svg>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-white">
+              <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"></path><circle cx="4" cy="4" r="2"></circle></svg>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-white">
+              <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><path d="M22 6l-10 7L2 6"></path></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
+        <p>© 2024 AnatomyLab. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const chatForm = document.getElementById('chat-form');
+      const userInput = document.getElementById('user-input');
+      const messagesContainer = document.getElementById('messages');
+      const questionButtons = document.querySelectorAll('button');
+
+      // Initial welcome message
+      const welcomeMessages = [
+        "Hello! I'm your NeuroScience AI assistant powered by LLaMA 3.2. What would you like to learn about today?",
+        "Welcome to AnatomyLab! Ask me anything about the brain or neuroscience.",
+        "Ready to explore the human brain? Ask me your questions!"
+      ];
+
+      // Replace initial message with random welcome
+      setTimeout(() => {
+        messagesContainer.innerHTML = '';
+        addMessage(welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)], 'ai');
+      }, 1500);
+
+      // Form submission
+      chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const message = userInput.value.trim();
+        if (message) {
+          addMessage(message, 'user');
+          userInput.value = '';
+          showTypingIndicator();
+          try {
+            const response = await generateResponse(message);
+            removeTypingIndicator();
+            addMessage(response, 'ai');
+          } catch (error) {
+            removeTypingIndicator();
+            addMessage("Sorry, I couldn't process your request. Please try again later.", 'ai');
+            console.error('Error:', error);
+          }
+        }
+      });
+
+      // Suggested questions
+      questionButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          userInput.value = button.textContent;
+          chatForm.dispatchEvent(new Event('submit'));
+        });
+      });
+
+      // Add message to chat
+      function addMessage(text, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'flex items-start space-x-3';
+
+        const avatar = document.createElement('div');
+        avatar.className = `flex-shrink-0 w-8 h-8 ${sender === 'user' ? 'bg-blue-600' : 'bg-blue-600'} rounded-full flex items-center justify-center text-white text-sm`;
+        avatar.textContent = sender === 'user' ? 'You' : 'AI';
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'flex-1';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'bg-white p-4 rounded-lg shadow-sm';
+        bubble.innerHTML = `<p class="text-gray-700">${text}</p>`;
+
+        const timestamp = document.createElement('span');
+        timestamp.className = 'text-xs text-gray-500 mt-1 block';
+        timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        contentDiv.appendChild(bubble);
+        contentDiv.appendChild(timestamp);
+
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(contentDiv);
+
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      // Typing indicator
+      function showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'flex items-start space-x-3';
+        typingDiv.id = 'typing-indicator';
+
+        const avatar = document.createElement('div');
+        avatar.className = 'flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm';
+        avatar.textContent = 'AI';
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'flex-1';
+
+        const typingBubble = document.createElement('div');
+        typingBubble.className = 'bg-white p-4 rounded-lg shadow-sm';
+        typingBubble.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+
+        contentDiv.appendChild(typingBubble);
+        typingDiv.appendChild(avatar);
+        typingDiv.appendChild(contentDiv);
+
+        messagesContainer.appendChild(typingDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      function removeTypingIndicator() {
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (typingIndicator) {
+          typingIndicator.remove();
+        }
+      }
+
+      // Generate AI response via Ollama API
+      async function generateResponse(message) {
+        const url = 'http://192.168.100.176:11434/api/generate';
+        const payload = {
+          model: 'llama3.2:1b',
+          prompt: `You are a NeuroScience AI assistant. Provide a concise and accurate answer to the following question about the human brain, neuroscience, or cognitive functions: "${message}"`,
+          stream: true
+        };
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        // Read the streaming response
+        const reader = response.body.getReader();
+        let fullResponse = '';
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          // Decode chunk and parse as JSON
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+          
+          for (const line of lines) {
+            try {
+              const json = JSON.parse(line);
+              if (json.response) {
+                fullResponse += json.response;
+              }
+            } catch (e) {
+              console.warn('Error parsing JSON chunk:', e);
+            }
+          }
+        }
+
+        return fullResponse.trim() || 'I received your question, but I need more details to provide a precise answer. Could you clarify?';
+      }
+    });
+  </script>
+</body>
+</html>

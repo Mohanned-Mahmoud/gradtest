@@ -10,12 +10,20 @@ export default defineConfig({
       dotfiles: true
     })
   ],
-  base: '/gradtest/',  // Must match your repository name exactly
+  base: process.env.NODE_ENV === 'production' ? '/gradtest/' : '/',
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  server: {
+    host: true,
+    port: 5173
+  },
+  preview: {
+    port: 5173
+  },
   build: {
     outDir: 'dist',
-    assetsDir: './'
+    assetsDir: './',
+    emptyOutDir: true
   }
 })

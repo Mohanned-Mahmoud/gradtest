@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AnatomyLab - 3D Brain Explorer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    #unity-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #unity-canvas {
+      width: 100%;
+      height: 100%;
+      background: #FFFFFF;
+      object-fit: contain;
+    }
+    .unity-wrapper {
+      position: relative;
+      width: 100%;
+      height: 600px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    .unity-container-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .unity-parent {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      gap: 2rem;
+    }
+    #loading-indicator {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+    .loading-content {
+      text-align: center;
+      padding: 2rem;
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+    .loading-bar-container {
+      width: 300px;
+      height: 4px;
+      background-color: #e5e7eb;
+      border-radius: 2px;
+      margin: 1rem 0;
+      overflow: hidden;
+    }
+    .loading-bar {
+      width: 0%;
+      height: 100%;
+      background-color: #2563eb;
+      border-radius: 2px;
+      transition: width 0.3s ease-in-out;
+    }
+    .loading-text {
+      color: #4b5563;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e5e7eb;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    #unity-loading-bar {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+    }
+    #unity-logo {
+      width: 154px;
+      height: 130px;
+      background: url('Build/unity-logo.png') no-repeat center;
+    }
+    #unity-progress-bar-empty {
+      width: 141px;
+      height: 18px;
+      margin-top: 10px;
+      background: url('Build/progress-bar-empty.png') no-repeat center;
+    }
+    #unity-progress-bar-full {
+      width: 0%;
+      height: 18px;
+      margin-top: 10px;
+      background: url('Build/progress-bar-full.png') no-repeat center;
+    }
+    #unity-footer {
+      position: relative;
+    }
+    #unity-fullscreen-button {
+      float: right;
+      width: 38px;
+      height: 38px;
+      background: url('Build/fullscreen-button.png') no-repeat center;
+    }
+    #unity-build-title {
+      float: right;
+      margin-right: 10px;
+      line-height: 38px;
+      font-family: arial;
+      font-size: 18px;
+    }
+    #unity-mobile-warning {
+      position: absolute;
+      left: 50%;
+      top: 5%;
+      transform: translate(-50%);
+      background: white;
+      padding: 10px;
+      display: none;
+    }
+    .dropdown-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: all 0.3s ease-out;
+      background-color: #f8fafc;
+      border-bottom-left-radius: 0.5rem;
+      border-bottom-right-radius: 0.5rem;
+      opacity: 0;
+    }
+    .dropdown-content.active {
+      max-height: 400px; /* Fixed height for scrolling */
+      opacity: 1;
+      transition: all 0.5s ease-in;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #3b82f6 #f1f5f9;
+    }
+    /* Custom scrollbar for Webkit browsers */
+    .dropdown-content.active::-webkit-scrollbar {
+      width: 8px;
+    }
+    .dropdown-content.active::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    .dropdown-content.active::-webkit-scrollbar-thumb {
+      background-color: #3b82f6;
+      border-radius: 4px;
+      border: 2px solid #f1f5f9;
+    }
+    .dropdown-content.active::-webkit-scrollbar-thumb:hover {
+      background-color: #2563eb;
+    }
+    /* Ensure the last card doesn't have bottom margin when scrolled */
+    .dropdown-content.active .region-card:last-child {
+      margin-bottom: 0;
+    }
+    /* Add padding to account for scrollbar */
+    .dropdown-content.active {
+      padding-right: 4px;
+    }
+    .dropdown-header {
+      cursor: pointer;
+      user-select: none;
+      background-color: #ffffff;
+      border-top-left-radius: 0.5rem;
+      border-top-right-radius: 0.5rem;
+      transition: all 0.2s ease;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 0.5rem;
+    }
+    .dropdown-header:hover {
+      background-color: #f1f5f9;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .dropdown-header.active {
+      background-color: #f1f5f9;
+      border-bottom: none;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    .dropdown-icon {
+      transition: transform 0.3s ease;
+    }
+    .dropdown-header.active .dropdown-icon {
+      transform: rotate(180deg);
+    }
+    .region-card {
+      background: white;
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+    }
+    .region-card:hover {
+      transform: translateX(4px);
+      border-color: #3b82f6;
+    }
+    .region-title {
+      color: #1e40af;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    .region-description {
+      color: #4b5563;
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+    .region-functions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      margin-top: 0.5rem;
+    }
+    .function-tag {
+      background-color: #dbeafe;
+      color: #1e40af;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+    }
+    .unity-container {
+      flex: 3;
+      min-width: 0;
+    }
+    .info-panel {
+      flex: 1;
+      min-width: 280px;
+      max-width: 320px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+  <header class="bg-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <a href="/" class="flex items-center space-x-2">
+            <span class="text-2xl">🧠</span>
+            <span class="text-xl font-bold text-gray-900">AnatomyLab</span>
+          </a>
+        </div>
+        <nav class="hidden md:flex items-center space-x-8">
+          <a href="/" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Home</a>
+          <a href="/test-features" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Test Features</a>
+          <a href="/products" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Products</a>
+          <a href="/about" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">About</a>
+          <a href="/contact" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Contact</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Interactive Brain Explorer</h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+          Explore the human brain in 3D with our interactive visualization tool
+        </p>
+      </div>
+
+      <div class="flex flex-col lg:flex-row gap-8">
+        <div class="unity-parent">
+          <div class="unity-container">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden relative h-[600px] w-full">
+              <div class="unity-wrapper">
+                <div class="unity-container-wrapper">
+                  <div id="unity-container">
+                    <canvas id="unity-canvas"></canvas>
+                    <div id="loading-indicator">
+                      <div class="loading-content">
+                        <div class="loading-spinner"></div>
+                        <h3 class="text-lg font-semibold text-gray-900">Loading 3D Brain Model</h3>
+                        <div class="loading-bar-container">
+                          <div id="loading-bar" class="loading-bar"></div>
+                        </div>
+                        <p id="loading-text" class="loading-text">Initializing Unity WebGL...</p>
+                      </div>
+                    </div>
+                    <div id="unity-loading-bar">
+                      <div id="unity-logo"></div>
+                      <div id="unity-progress-bar-empty">
+                        <div id="unity-progress-bar-full"></div>
+                      </div>
+                    </div>
+                    <div id="unity-mobile-warning">
+                      WebGL builds are not supported on mobile devices.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="info-panel">
+            <div class="bg-white rounded-lg shadow-lg p-4 sticky top-4">
+              <h3 class="text-lg font-semibold text-gray-900 mb-3">How to Use</h3>
+              <div class="space-y-2">
+                <div class="border rounded-lg overflow-hidden">
+                  <div class="dropdown-header p-3 flex justify-between items-center" onclick="toggleDropdown(this)">
+                    <h4 class="text-base font-medium text-gray-900">Controls</h4>
+                    <svg class="dropdown-icon w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                  <div class="dropdown-content px-3 pb-3">
+                    <ul class="space-y-1 text-sm text-gray-600">
+                      <li class="flex items-start">
+                        <span class="text-blue-600 mr-1">•</span>
+                        <span>Left-click + drag to rotate</span>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="text-blue-600 mr-1">•</span>
+                        <span>Right-click + drag to pan</span>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="text-blue-600 mr-1">•</span>
+                        <span>Scroll to zoom in/out</span>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="text-blue-600 mr-1">•</span>
+                        <span>Click regions for details</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="border rounded-lg overflow-hidden">
+                  <div class="dropdown-header p-3 flex justify-between items-center" onclick="toggleDropdown(this)">
+                    <h4 class="text-base font-medium text-gray-900">Brain Regions</h4>
+                    <svg class="dropdown-icon w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                  <div class="dropdown-content px-3 pb-3">
+                    <div class="region-card">
+                      <div class="region-title">Frontal Lobe</div>
+                      <div class="region-description">
+                        The command center of the brain, responsible for higher cognitive functions and personality.
+                      </div>
+                      <div class="region-functions">
+                        <span class="function-tag">Decision Making</span>
+                        <span class="function-tag">Problem Solving</span>
+                        <span class="function-tag">Personality</span>
+                        <span class="function-tag">Planning</span>
+                        <span class="function-tag">Emotional Control</span>
+                      </div>
+                    </div>
+
+                    <div class="region-card">
+                      <div class="region-title">Parietal Lobe</div>
+                      <div class="region-description">
+                        Processes sensory information and helps with spatial awareness and navigation.
+                      </div>
+                      <div class="region-functions">
+                        <span class="function-tag">Sensory Processing</span>
+                        <span class="function-tag">Spatial Awareness</span>
+                        <span class="function-tag">Touch Perception</span>
+                        <span class="function-tag">Navigation</span>
+                        <span class="function-tag">Math Skills</span>
+                      </div>
+                    </div>
+
+                    <div class="region-card">
+                      <div class="region-title">Temporal Lobe</div>
+                      <div class="region-description">
+                        Handles auditory processing, memory formation, and language comprehension.
+                      </div>
+                      <div class="region-functions">
+                        <span class="function-tag">Memory</span>
+                        <span class="function-tag">Language</span>
+                        <span class="function-tag">Hearing</span>
+                        <span class="function-tag">Emotion</span>
+                        <span class="function-tag">Face Recognition</span>
+                      </div>
+                    </div>
+
+                    <div class="region-card">
+                      <div class="region-title">Occipital Lobe</div>
+                      <div class="region-description">
+                        The visual processing center of the brain, responsible for sight and visual perception.
+                      </div>
+                      <div class="region-functions">
+                        <span class="function-tag">Vision</span>
+                        <span class="function-tag">Color Processing</span>
+                        <span class="function-tag">Motion Detection</span>
+                        <span class="function-tag">Depth Perception</span>
+                        <span class="function-tag">Pattern Recognition</span>
+                      </div>
+                    </div>
+
+                    <div class="region-card">
+                      <div class="region-title">Cerebellum</div>
+                      <div class="region-description">
+                        Coordinates movement, balance, and motor learning, often called the "little brain."
+                      </div>
+                      <div class="region-functions">
+                        <span class="function-tag">Balance</span>
+                        <span class="function-tag">Coordination</span>
+                        <span class="function-tag">Motor Learning</span>
+                        <span class="function-tag">Posture</span>
+                        <span class="function-tag">Timing</span>
+                      </div>
+                    </div>
+
+                    <div class="region-card">
+                      <div class="region-title">Brainstem</div>
+                      <div class="region-description">
+                        Controls vital life functions and serves as a relay center between the brain and body.
+                      </div>
+                      <div class="region-functions">
+                        <span class="function-tag">Breathing</span>
+                        <span class="function-tag">Heart Rate</span>
+                        <span class="function-tag">Sleep</span>
+                        <span class="function-tag">Consciousness</span>
+                        <span class="function-tag">Reflexes</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="border rounded-lg overflow-hidden">
+                  <div class="dropdown-header p-3 flex justify-between items-center" onclick="toggleDropdown(this)">
+                    <h4 class="text-base font-medium text-gray-900">Tips</h4>
+                    <svg class="dropdown-icon w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                  <div class="dropdown-content px-3 pb-3">
+                    <ul class="space-y-1 text-sm text-gray-600">
+                      <li class="flex items-start">
+                        <span class="text-blue-600 mr-1">•</span>
+                        <span>Use zoom for details</span>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="text-blue-600 mr-1">•</span>
+                        <span>Click regions for info</span>
+                      </li>
+                      <li class="flex items-start">
+                        <span class="text-blue-600 mr-1">•</span>
+                        <span>Reset view with home button</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="bg-blue-50 p-3 rounded-lg">
+                  <h4 class="text-base font-medium text-blue-900 mb-1">Did You Know?</h4>
+                  <p class="text-sm text-blue-800">
+                    The brain contains ~86 billion neurons and processes info at up to 268 mph!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-gray-900 text-white mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <h3 class="text-lg font-semibold mb-4">AnatomyLab</h3>
+          <p class="text-gray-400">
+            Advancing human anatomy education through cutting-edge technology and interactive learning experiences.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+          <ul class="space-y-2">
+            <li><a href="/products" class="text-gray-400 hover:text-white">Products</a></li>
+            <li><a href="/test-features" class="text-gray-400 hover:text-white">Test Features</a></li>
+            <li><a href="/about" class="text-gray-400 hover:text-white">About Us</a></li>
+            <li><a href="/contact" class="text-gray-400 hover:text-white">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Contact Info</h3>
+          <ul class="space-y-2 text-gray-400">
+            <li>contact@anatomylab.com</li>
+            <li>+1 (555) 123-4567</li>
+            <li>123 Science Way</li>
+            <li>Innovation City, IC 12345</li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Follow Us</h3>
+          <div class="flex space-x-4">
+            <a href="#" class="text-gray-400 hover:text-white">
+              <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path></svg>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-white">
+              <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path></svg>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-white">
+              <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"></path><circle cx="4" cy="4" r="2"></circle></svg>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-white">
+              <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><path d="M22 6l-10 7L2 6"></path></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
+        <p>&copy; 2024 AnatomyLab. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    var buildUrl = "Build";
+    var loaderUrl = buildUrl + "/build-nocompress.loader.js";
+    var config = {
+      dataUrl: buildUrl + "/build-nocompress.data",
+      frameworkUrl: buildUrl + "/build-nocompress.framework.js",
+      codeUrl: buildUrl + "/build-nocompress.wasm",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "AnatomyLab",
+      productName: "3D Brain Explorer",
+      productVersion: "1.0",
+      webglContextAttributes: {
+        preserveDrawingBuffer: true,
+        powerPreference: "high-performance"
+      },
+      devicePixelRatio: window.devicePixelRatio || 1
+    };
+
+    var container = document.querySelector("#unity-container");
+    var canvas = document.querySelector("#unity-canvas");
+    var loadingBar = document.querySelector("#loading-bar");
+    var loadingText = document.querySelector("#loading-text");
+    var loadingIndicator = document.querySelector("#loading-indicator");
+
+    function setCanvasSize() {
+      var wrapper = document.querySelector(".unity-wrapper");
+      var containerWrapper = document.querySelector(".unity-container-wrapper");
+      var width = wrapper.clientWidth;
+      var height = wrapper.clientHeight;
+      
+      // Calculate aspect ratio
+      var aspectRatio = 16 / 9; // Unity's default aspect ratio
+      var containerWidth = width;
+      var containerHeight = height;
+      
+      if (width / height > aspectRatio) {
+        containerWidth = height * aspectRatio;
+      } else {
+        containerHeight = width / aspectRatio;
+      }
+      
+      // Set container size
+      containerWrapper.style.width = containerWidth + 'px';
+      containerWrapper.style.height = containerHeight + 'px';
+      
+      // Set canvas size
+      canvas.width = containerWidth;
+      canvas.height = containerHeight;
+    }
+
+    // Initial size
+    setCanvasSize();
+
+    // Handle window resize
+    window.addEventListener('resize', setCanvasSize);
+
+    var script = document.createElement("script");
+    script.src = loaderUrl;
+    script.onload = () => {
+      createUnityInstance(canvas, config, (progress) => {
+        loadingBar.style.width = 100 * progress + "%";
+        loadingText.textContent = `Loading Unity... ${Math.round(progress * 100)}%`;
+      }).then((unityInstance) => {
+        setTimeout(() => {
+          loadingIndicator.style.opacity = "0";
+          loadingIndicator.style.transition = "opacity 0.5s ease-out";
+          setTimeout(() => {
+            loadingIndicator.style.display = "none";
+          }, 500);
+        }, 1000);
+      }).catch((message) => {
+        loadingText.textContent = "Error loading Unity WebGL. Please refresh the page.";
+        console.error(message);
+      });
+    };
+    document.body.appendChild(script);
+
+    function toggleDropdown(element) {
+      const content = element.nextElementSibling;
+      const isActive = element.classList.contains('active');
+      
+      // Close all other dropdowns
+      document.querySelectorAll('.dropdown-header.active').forEach(header => {
+        if (header !== element) {
+          header.classList.remove('active');
+          header.nextElementSibling.classList.remove('active');
+        }
+      });
+
+      // Toggle current dropdown
+      element.classList.toggle('active');
+      content.classList.toggle('active');
+    }
+
+    // Initialize first dropdown as open
+    document.addEventListener('DOMContentLoaded', () => {
+      const firstDropdown = document.querySelector('.dropdown-header');
+      if (firstDropdown) {
+        firstDropdown.classList.add('active');
+        firstDropdown.nextElementSibling.classList.add('active');
+      }
+    });
+  </script>
+</body>
+</html>
